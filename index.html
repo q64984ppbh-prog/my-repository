@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UP! Crash</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #0f1115 0%, #1a1d24 100%);
+            color: #ffffff;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 480px;
+            margin: 0 auto;
+            padding: 16px;
+        }
+
+        /* Header */
+        .header {
+            background: rgba(30, 33, 40, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .avatar {
+            width: 56px;
+            height: 56px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: bold;
+            color: white;
+            border: 3px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .level-badge {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            padding: 6px 16px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 600;
+            display: inline-block;
+            margin-bottom: 8px;
+        }
+
+        .balance-card {
+            background: linear-gradient(135deg, rgba(40, 42, 50, 0.9) 0%, rgba(28, 30, 36, 0.9) 100%);
+            border-radius: 16px;
+            padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .balance-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(102, 126, 234, 0.5), transparent);
+        }
+
+        .balance-amount {
+            font-size: 36px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #ffffff 0%, #a0aec0 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin: 8px 0;
+            letter-spacing: -0.5px;
+        }
+
+        .ton-label {
+            color: #667eea;
+            font-size: 14px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .action-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .btn {
+            padding: 16px;
+            border-radius: 14px;
+            border: none;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.05);
+            color: #a0aec0;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* Game Area */
+        .game-area {
+            background: rgba(30, 33, 40, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            position: relative;
+            min-height: 300px;
+            overflow: hidden;
+        }
+
+        .rocket-container {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 2;
+            transition: transform 0.3s ease;
+        }
+
+        .rocket {
+            font-size: 64px;
+            filter: drop-shadow(0 0 20px rgba(102, 126, 234, 0.5));
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .stars {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        .star {
+            position: absolute;
+            background: white;
+            border-radius: 50%;
+            animation: twinkle 2s infinite;
+        }
+
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 1; }
+        }
+
+        /* Multipliers */
+        .multipliers-scroll {
+            display: flex;
+            gap: 10px;
+            padding: 16px 0;
+            overflow-x: auto;
+            margin-bottom: 20px;
+        }
+
+        .multiplier-chip {
+            padding: 12px 24px;
+            background: rgba(40, 42, 50, 0.8);
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            white-space: nowrap;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            min-width: 100px;
+            text-align: center;
+        }
+
+        .multiplier-chip.waiting {
+            background: linear-gradient(135deg, #4a5568 0%, #2d3748 100%);
+            color: #a0aec0;
+        }
+
+        .multiplier-chip.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: rgba(102, 126, 234, 0.3);
+        }
+
+        /* Bet Button */
+        .bet-button {
+            width: 100%;
+            padding: 24px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 18px;
+            color: white;
+            font-size: 20px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 20px 0;
+            letter-spacing: 0.5px;
+            box-shadow: 0 8px 32px rgba(102, 126, 234, 0.3);
+        }
+
+        .bet-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 40px rgba(102, 126, 234, 0.4);
+        }
+
+        .bet-button.cash-out {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            box-shadow: 0 8px 32px rgba(16, 185, 129, 0.3);
+        }
+
+        /* Bets List */
+        .bets-list {
+            background: rgba(30, 33, 40, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .bet-item {
+            display: flex;
+            align-items: center;
+            padding: 16px;
+            background: rgba(40, 42, 50, 0.5);
+            border-radius: 14px;
+            margin-bottom: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.3s ease;
+        }
+
+        .bet-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .bet-avatar {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #4299e1 0%, #667eea 100%);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: white;
+            margin-right: 12px;
+            font-size: 18px;
+        }
+
+        .bet-info {
+            flex: 1;
+        }
+
+        .bet-username {
+            font-weight: 600;
+            font-size: 16px;
+            margin-bottom: 4px;
+        }
+
+        .bet-details {
+            font-size: 13px;
+            color: #a0aec0;
+            display: flex;
+            gap: 8px;
+        }
+
+        .bet-amount {
+            font-size: 18px;
+            font-weight: 700;
+            text-align: right;
+            min-width: 80px;
+        }
+
+        .bet-amount.cashed-out {
+            color: #10b981;
+        }
+
+        /* Navigation */
+        .navigation {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(20, 22, 27, 0.98);
+            backdrop-filter: blur(20px);
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            display: flex;
+            padding: 16px;
+            z-index: 1000;
+        }
+
+        .nav-item {
+            flex: 1;
+            text-align: center;
+            padding: 12px;
+            color: #a0aec0;
+            font-size: 14px;
+            font-weight: 600;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .nav-item.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .nav-icon {
+            font-size: 20px;
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+        }
+
+        /* Animations */
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="user-info">
+                <div class="avatar">T</div>
+                <div>
+                    <div class="level-badge">trumtory, 11 lvl</div>
+                    <div class="ton-label">Баланс</div>
+                    <div class="balance-amount">49 / 280 TON</div>
+                </div>
+            </div>
+            
+            <div class="action-buttons">
+                <button class="btn btn-primary">Пополнить</button>
+                <button class="btn btn-secondary">Награды</button>
+            </div>
+        </div>
+
+        <!-- Game Area -->
+        <div class="game-area">
+            <div class="stars" id="stars"></div>
+            <div class="rocket-container">
+                <div class="rocket">🚀</div>
+            </div>
+        </div>
+
+        <!-- Multipliers -->
+        <div class="multipliers-scroll">
+            <div class="multiplier-chip waiting">Ожидание</div>
+            <div class="multiplier-chip">4.85</div>
+            <div class="multiplier-chip">5.51</div>
+            <div class="multiplier-chip">1.96</div>
+            <div class="multiplier-chip">1.77</div>
+            <div class="multiplier-chip">1.05</div>
+            <div class="multiplier-chip">1.00</div>
+        </div>
+
+        <!-- Bet Button -->
+        <button class="bet-button" id="betButton">Сделать ставку</button>
+
+        <!-- Bets List -->
+        <div class="bets-list">
+            <div class="bet-item">
+                <div class="bet-avatar">0.5</div>
+                <div class="bet-info">
+                    <div class="bet-username">Shakh</div>
+                    <div class="bet-details">9.86 • x1.04</div>
+                </div>
+                <div class="bet-amount">10.34</div>
+            </div>
+            <div class="bet-item">
+                <div class="bet-avatar">S</div>
+                <div class="bet-info">
+                    <div class="bet-username">Shakh</div>
+                    <div class="bet-details">1.00 • x1.31</div>
+                </div>
+                <div class="bet-amount">1.31</div>
+            </div>
+            <div class="bet-item">
+                <div class="bet-avatar">O</div>
+                <div class="bet-info">
+                    <div class="bet-username">Osquizyy</div>
+                    <div class="bet-details">0.65 • x1.16</div>
+                </div>
+                <div class="bet-amount">0.75</div>
+            </div>
+            <div class="bet-item">
+                <div class="bet-avatar">R</div>
+                <div class="bet-info">
+                    <div class="bet-username">Rich</div>
+                    <div class="bet-details">0.64 • x1.17</div>
+                </div>
+                <div class="bet-amount">0.75</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navigation -->
+    <div class="navigation">
+        <div class="nav-item active">
+            <div class="nav-icon">📦</div>
+            <div>Кейсы</div>
+        </div>
+        <div class="nav-item">
+            <div class="nav-icon">🚀</div>
+            <div>Ракета</div>
+        </div>
+        <div class="nav-item">
+            <div class="nav-icon">👤</div>
+            <div>Профиль</div>
+        </div>
+    </div>
+
+    <script>
+        let tg = window.Telegram.WebApp;
+        tg.expand();
+        
+        let currentMultiplier = 1.0;
+        let gameActive = false;
+        let hasBet = false;
+        let balance = 49;
+        let rocketSpeed = 0;
+        let stars = [];
+
+        function initStars() {
+            const starsContainer = document.getElementById('stars');
+            for(let i = 0; i < 80; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+                star.style.width = star.style.height = (Math.random() * 3 + 1) + 'px';
+                star.style.left = Math.random() * 100 + '%';
+                star.style.top = Math.random() * 100 + '%';
+                star.style.animationDelay = Math.random() * 2 + 's';
+                star.style.opacity = 0.3 + Math.random() * 0.7;
+                starsContainer.appendChild(star);
+                stars.push({
+                    element: star,
+                    speed: 0.5 + Math.random() * 1.5,
+                    x: parseFloat(star.style.left),
+                    y: parseFloat(star.style.top)
+                });
+            }
+        }
+
+        function updateRocket() {
+            const rocket = document.querySelector('.rocket-container');
+            if(gameActive) {
+                currentMultiplier += 0.01;
+                rocketSpeed += 0.1;
+                const moveY = Math.min(rocketSpeed * 2, 100);
+                rocket.style.transform = `translate(-50%, calc(-50% - ${moveY}px)) scale(${1 + currentMultiplier * 0.1})`;
+                
+                updateStars();
+                
+                document.querySelectorAll('.bet-amount:not(.cashed-out)').forEach(el => {
+                    if(!el.closest('.bet-item').querySelector('.bet-amount').classList.contains('cashed-out')) {
+                        const base = parseFloat(el.closest('.bet-item').querySelector('.bet-details').textContent.split('•')[0]);
+                        const amount = base * currentMultiplier;
+                        el.textContent = amount.toFixed(2);
+                    }
+                });
+            } else {
+                rocket.style.transform = 'translate(-50%, -50%) scale(1)';
+                rocketSpeed = 0;
+            }
+        }
+
+        function updateStars() {
+            stars.forEach(star => {
+                star.y -= star.speed * 0.5;
+                if(star.y < -5) star.y = 105;
+                star.element.style.top = star.y + '%';
+            });
+        }
+
+        document.getElementById('betButton').addEventListener('click', function() {
+            if(!hasBet && !gameActive) {
+                gameActive = true;
+                hasBet = true;
+                this.textContent = `Забрать ${(10 * currentMultiplier).toFixed(2)} TON`;
+                this.classList.add('cash-out', 'pulse');
+                
+                document.querySelector('.multiplier-chip.waiting').textContent = currentMultiplier.toFixed(2);
+                document.querySelector('.multiplier-chip.waiting').classList.remove('waiting');
+                document.querySelector('.multiplier-chip.waiting').classList.add('active');
+                
+                const betsList = document.querySelector('.bets-list');
+                const newBet = document.createElement('div');
+                newBet.className = 'bet-item';
+                newBet.innerHTML = `
+                    <div class="bet-avatar">Y</div>
+                    <div class="bet-info">
+                        <div class="bet-username">You</div>
+                        <div class="bet-details">10.00 • x${currentMultiplier.toFixed(2)}</div>
+                    </div>
+                    <div class="bet-amount">${(10 * currentMultiplier).toFixed(2)}</div>
+                `;
+                betsList.insertBefore(newBet, betsList.firstChild);
+            } else if(hasBet && gameActive) {
+                hasBet = false;
+                gameActive = false;
+                this.textContent = 'Сделать ставку';
+                this.classList.remove('cash-out', 'pulse');
+                document.querySelectorAll('.bet-amount').forEach(el => {
+                    if(el.closest('.bet-item').querySelector('.bet-username').textContent === 'You') {
+                        el.classList.add('cashed-out');
+                    }
+                });
+            }
+        });
+
+        document.querySelectorAll('.nav-item').forEach(item => {
+            item.addEventListener('click', function() {
+                document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+
+        initStars();
+        setInterval(updateRocket, 50);
+        
+        document.querySelectorAll('.bet-amount').forEach(el => {
+            const base = parseFloat(el.closest('.bet-item').querySelector('.bet-details').textContent.split('•')[0].trim());
+            const multiplier = parseFloat(el.closest('.bet-item').querySelector('.bet-details').textContent.split('x')[1]);
+            el.textContent = (base * multiplier).toFixed(2);
+        });
+    </script>
+</body>
+</html>
